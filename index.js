@@ -124,6 +124,6 @@ app.get('/uid', (req,res)=>{
 
 
 
-app.listen( process.env.PORT,()=>{
-	console.log('Api Rodando porta  '+process.env.PORT)
+app.listen( 3003,()=>{
+	console.log('Api Rodando porta 3003 ')
 })
