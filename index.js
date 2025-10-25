@@ -121,9 +121,6 @@ app.get('/uid', (req,res)=>{
 })
 /*----------------------------------*/
 
-
-
-
 app.listen( 3003,()=>{
 	console.log('Api Rodando porta 3003 ')
 })
