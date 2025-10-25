@@ -266,7 +266,9 @@
 		<%- include('./../partials/modal_cadastrar_clientes.ejs') %>
 	<!-- FIM MODAL PROFILE -->
 	
-    
+    <!-- MODAL PROFILE -->
+		<%- include('./../partials/modal_cadastrar_usuarios.ejs') %>
+	<!-- FIM MODAL PROFILE -->
 
     <!-- MODAL PROFILE -->
 		<%- include('./../partials/modal_profile.ejs') %>
@@ -355,6 +357,40 @@
 					document.getElementById("vlrTotalRecebidos").innerHTML="******";
 				}
 			});
+			
+			
+			$('#cadastrarUsuarios').click(function(){
+				let uid_usuario = $('#uid_usuario').val();
+				let id_empresa = $('#id_empresa').val();
+				let nome = $('#nome').val();
+				let email = $('#email').val();
+				let senha = $('#senha').val();
+				
+				const funcionario = document.getElementById('funcionario');
+  
+
+				if (funcionario.checked) {
+					_funcionario= "0";
+				} else {
+					_funcionario= "1";
+				}
+				$.post('/adm/cadasrtar_usuarios', {
+					uid_usuario,
+					id_empresa,					
+					nome,
+					email,
+					senha,
+					_funcionario
+				}, function(resposta) {
+					swal(resposta);
+					setTimeout(() => {
+					  window.location.href = "/adm/principal/"+uid_usuario;				  
+					}, "1000");
+				});
+				
+				
+			})
+			
 			
 		})
 	</script>

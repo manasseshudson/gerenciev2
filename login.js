@@ -73,6 +73,7 @@ router.post('/login', (req,res)=>{
 					
 					if(result[0].admin=="0"){
 						res.cookie('user', result[0].uid_usuario); 
+						//res.redirect('/user/abertura_caixa/'+result[0].uid_usuario)
 						res.redirect('user/vendas/'+result[0].uid_usuario)
 						
 					}else{

@@ -16,26 +16,143 @@ const dayjs = require('dayjs')
 const title = 'GERENCIANDO SUA EMPRESA'
 const title_adm = ""
 
+router.get('/user/pdv/:uid_usuario/:venda', (req,res)=>{
+	const { uid_usuario, venda } = req.params;
+
+    knex('tb_usuario').where({uid_usuario: uid_usuario}).select().then(result=>{		
+		var id_empresa = result[0].id_empresa;
+
+		var email_user = result[0].email;
+		var nome_user = result[0].descricao;
+		
+		knex('tb_empresa').where({id_empresa: id_empresa}).select().then(result_empresa=>{			
+			var UsaContasPagar = result_empresa[0].UsaContasPagar;
+			var UsaContasReceber = result_empresa[0].UsaContasReceber;
+			var UsaFiado = result_empresa[0].UsaFiado;
+
+			var nome_empresa = result_empresa[0].nome;
+			var cnpj_empresa = result_empresa[0].cnpj;
+			var cnpj_formatado = result_empresa[0].cnpj_formatado;
+			knex('tb_cliente').where({id_empresa: id_empresa}).select().then(cliente=>{
+				knex('tb_produto').where({id_empresa: id_empresa}).select().then(produtos=>{
+					//console.log(produtos)
+					knex('tb_condicao_pagamento').select().then(condPagto=>{
+						//console.log(condPagto)
+						
+						res.render('user/vendas',{
+							title,
+							logo: 'IBADEJUF',
+							logo_site: title,
+							user: result[0].descricao,
+							venda,
+							nome_empresa,
+							cnpj_empresa,
+							cnpj_formatado,
+							email_user,
+							nome_user,
+							produtos,
+							cliente,
+							uid_usuario,
+							abrir_aviso: false,
+							id_empresa: id_empresa,
+							UsaContasPagar,
+							UsaContasReceber,
+							UsaFiado,
+							condPagto
+						})			
+					})
+				})	
+			
+			})
+		})
+	})    
+	
+})
+
 
 router.get('/user/abertura_caixa/:uid_usuario', async (req,res)=>{
 	const { uid_usuario } = req.params;
 	
-	console.log(dataDiaSemHoras())
-	const id = await knex('tb_usuario').where({uid_usuario: uid_usuario}).select().first();
+	///console.log(dataDiaSemHoras())
+	//const id = await knex('tb_usuario').where({uid_usuario: uid_usuario}).select().first();
 		
-		
+	
+	const dadosAbertura = await knex('tb_lancamento')
+			.where({'tb_lancamento.id_empresa': 10})
+			.andWhere({uid_usuario: uid_usuario})
+			.andWhere(knex.raw('month(data_pagamento)='+mes()))
+			.andWhere(knex.raw('year(data_pagamento)='+ano()))
+			.andWhere(knex.raw('day(data_pagamento)='+dia()))
+			.andWhere({'descricao':'ABERTURA DE CAIXA'})
+			//.andWhere({'descricao':'FECHAMENTO DE CAIXA'})
+			.select();
+			//ABERTURA DE CAIXA
+			//FECHAMENTO DE CAIXA
+	
+	const dadosFechamento = await knex('tb_lancamento')
+			.where({'tb_lancamento.id_empresa': 10})
+			.andWhere({uid_usuario: uid_usuario})
+			.andWhere(knex.raw('month(data_pagamento)='+mes()))
+			.andWhere(knex.raw('year(data_pagamento)='+ano()))
+			.andWhere(knex.raw('day(data_pagamento)='+dia()))
+			.andWhere({'descricao':'FECHAMENTO DE CAIXA'})
+			.select();
+	
+	
+	console.log('qtde abertura: '+dadosAbertura.length)
+	console.log('qtde fechamento: '+dadosFechamento.length)
+	
+	let booExisteAbertura = false;
+	let booExisteFechamento = false;
+	
+	
+	if(dadosAbertura.length > "0"){
+		booExisteAbertura = true
+	}
+	if(dadosFechamento.length > "0"){
+		booExisteFechamento = true
+	}
+	
+	if(booExisteAbertura == true && booExisteFechamento == true || booExisteAbertura == false && booExisteFechamento == false  ){
+		if(dadosAbertura.length == dadosFechamento.length){
+			console.log('fazer nova abertura')
+			res.status(200).send({mensagem : "nao houve abertura"});
+		}
+	}
+	
+	//res.redirect('user/vendas/'+uid_usuario)
+	/*if(booExisteAbertura == false){
+		res.status(200).send({mensagem : "nao houve abertura"});
+	}*/
+	
+	//res.status(200).send({mensagem : "nao houve abertura"});
+	//console.log('Avertura: '+booExisteAbertura);
+	//console.log('Fechamento: '+booExisteFechamento);
+	
+	/*
 	knex('tb_usuario').where({uid_usuario: uid_usuario}).select().then(result=>{
 		var id_empresa = result[0].id_empresa;
 		knex('tb_lancamento')
 			.where({'tb_lancamento.id_empresa': id_empresa})
-			//.andWhere(knex.raw('data_pagamento='+dataDiaSemHoras()))
+			.andWhere(knex.raw('uid_usuario=uid_usuario'))
 			
 			.andWhere(knex.raw('month(data_pagamento)='+mes()))
 			.andWhere(knex.raw('year(data_pagamento)='+ano()))
 			.andWhere(knex.raw('day(data_pagamento)='+dia()))
+			//ABERTURA DE CAIXA
+			//FECHAMENTO DE CAIXA
 			
 			.select().then(resultLancamento=>{
-				console.log(resultLancamento.length)
+				//console.log(resultLancamento)
+				
+				resultLancamento.forEach(dados=>{
+					//console.log(dados.descricao)
+					if(dados.descricao=="ABERTURA DE CAIXA"){
+						
+					}
+				})
+				
+				
 				if(resultLancamento.length=="0"){
 					res.status(200).send({mensagem : "nao houve abertura"});
 				}else{
@@ -43,7 +160,7 @@ router.get('/user/abertura_caixa/:uid_usuario', async (req,res)=>{
 				}				
 			})
 	})
-	
+	*/
 })
 
 router.post('/user/aberturaCaixa',(req,res)=>{
@@ -114,7 +231,7 @@ router.post('/user/realizarOutrasSaidas',(req,res)=>{
 			data_externa: dataDoDia,
 			saidas: 1
 		}).then(result=>{
-				res.status(200).send({mensagem : "Cadastro Realizdo com Sucesso."});
+			res.status(200).send({mensagem : "Cadastro Realizdo com Sucesso."});
 		});
 	}
 	catch(error){
@@ -277,12 +394,6 @@ router.post('/user/lancamentos_filtro', (req,res)=>{
 	})    
 })
 */
-
-
-
-
-
-
 
 router.get('/user/produtos/:uid_usuario', (req,res)=>{
     const { uid_usuario } = req.params;
@@ -1442,58 +1553,6 @@ router.post('/user/editLancamento/',(req,res)=>{
 	})
 })
 
-router.get('/user/pdv/:uid_usuario/:venda', (req,res)=>{
-	const { uid_usuario, venda } = req.params;
-
-    knex('tb_usuario').where({uid_usuario: uid_usuario}).select().then(result=>{		
-		var id_empresa = result[0].id_empresa;
-
-		var email_user = result[0].email;
-		var nome_user = result[0].descricao;
-		
-		knex('tb_empresa').where({id_empresa: id_empresa}).select().then(result_empresa=>{			
-			var UsaContasPagar = result_empresa[0].UsaContasPagar;
-			var UsaContasReceber = result_empresa[0].UsaContasReceber;
-			var UsaFiado = result_empresa[0].UsaFiado;
-
-			var nome_empresa = result_empresa[0].nome;
-			var cnpj_empresa = result_empresa[0].cnpj;
-			var cnpj_formatado = result_empresa[0].cnpj_formatado;
-			knex('tb_cliente').where({id_empresa: id_empresa}).select().then(cliente=>{
-				knex('tb_produto').where({id_empresa: id_empresa}).select().then(produtos=>{
-					console.log(produtos)
-					knex('tb_condicao_pagamento').select().then(condPagto=>{
-						console.log(condPagto)
-						
-						res.render('user/vendas',{
-							title,
-							logo: 'IBADEJUF',
-							logo_site: title,
-							user: result[0].descricao,
-							venda,
-							nome_empresa,
-							cnpj_empresa,
-							cnpj_formatado,
-							email_user,
-							nome_user,
-							produtos,
-							cliente,
-							uid_usuario,
-							abrir_aviso: false,
-							id_empresa: id_empresa,
-							UsaContasPagar,
-							UsaContasReceber,
-							UsaFiado,
-							condPagto
-						})			
-					})
-				})	
-			
-			})
-		})
-	})    
-	
-})
 
 
 router.get('/user/editpdv/:uid_usuario/:venda', (req,res)=>{

@@ -17,6 +17,35 @@ const title = 'GERENCIANDO SUA EMPRESA'
 const title_adm = ""
 
 
+router.post('/adm/cadasrtar_usuarios',(req,res)=>{
+	const { uid_usuario,id_empresa,nome,email,senha, _funcionario} = req.body;
+	
+	let _usuario = base64.encode(email);
+		
+		
+	let _senha = base64.encode(senha);
+	
+	try{
+		knex('tb_usuario').insert({
+			usuario: 		_usuario,
+			descricao:  	nome,
+			email : 		email,
+			senha: 			_senha,
+			uid_usuario : 	uid2(10),
+			id_empresa: id_empresa,
+			admin: _funcionario
+		})	
+		.then(result=>{
+			//res.redirect('/login');
+			res.send('Funcionário Cadastrado com Sucesso.')
+		})
+	}catch(error){
+		
+	}
+	
+})
+
+
 router.get('/adm/lancamentos_filtro/:uid_usuario/:mes/:ano', (req,res)=>{
 
     const { uid_usuario, mes, ano } = req.params;
